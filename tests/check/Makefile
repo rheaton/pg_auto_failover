@@ -40,12 +40,15 @@ OBJS += $(addprefix $(SRC_DIR)/pg_autoctl/,$(SRC_LIBS))
 # Additionally build (and link) all objects from this test directory.
 TEST_OBJS = $(patsubst ${TEST_DIR}/%.c,%.o,$(wildcard ${TEST_DIR}/*.c))
 
-build: $(TEST_OBJS)
+build_src:
 	make -C ${SRC_DIR}/pg_autoctl
-	$(CC) $(CFLAGS) $(TEST_OBJS) $(OBJS) $(LIBS) -o $@
 
-test: build
-	./build
+
+build_test: build_src $(TEST_OBJS)
+	$(CC) $(CFLAGS) $(TEST_OBJS) $(OBJS) $(LIBS) -o run_tests
+
+test: clean build_test
+	./run_tests
 
 clean:
-	rm build
+	rm -f run_tests *.o

@@ -357,7 +357,12 @@ pgsql_finish(PGSQL *pgsql)
 {
 	if (pgsql->connection != NULL)
 	{
-		log_debug("Disconnecting from \"%s\"", pgsql->connectionString);
+		char scrubbedConnectionString[MAXCONNINFO];
+		parse_and_scrub_connection_string(pgsql->connectionString,
+										  scrubbedConnectionString);
+		log_debug("Disconnecting from \"%s\"", scrubbedConnectionString);
+		PQfreemem(scrubbedConnectionString);
+
 		PQfinish(pgsql->connection);
 		pgsql->connection = NULL;
 
@@ -452,7 +457,9 @@ pgsql_open_connection(PGSQL *pgsql)
 		return pgsql->connection;
 	}
 
-	log_debug("Connecting to \"%s\"", pgsql->connectionString);
+	char scrubbedConnectionString[MAXCONNINFO];
+	parse_and_scrub_connection_string(pgsql->connectionString, scrubbedConnectionString);
+	log_debug("Connecting to \"%s\"", scrubbedConnectionString);
 
 	/* we implement our own retry strategy */
 	setenv("PGCONNECT_TIMEOUT", POSTGRES_CONNECT_TIMEOUT, 1);
@@ -483,7 +490,7 @@ pgsql_open_connection(PGSQL *pgsql)
 			log_error("Failed to connect to %s database at \"%s\", "
 					  "see above for details",
 					  connectionTypeToString(pgsql->connectionType),
-					  pgsql->connectionString);
+					  scrubbedConnectionString);
 
 			pgsql->status = PG_CONNECTION_BAD;
 
@@ -511,6 +518,7 @@ pgsql_open_connection(PGSQL *pgsql)
 						 &pgAutoCtlDefaultNoticeProcessor,
 						 NULL);
 
+	PQfreemem(scrubbedConnectionString);
 	return pgsql->connection;
 }
 
@@ -528,8 +536,10 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 	PGPing lastWarningMessage = PQPING_OK;
 	uint64_t lastWarningTime = 0;
 
+	char scrubbedConnectionString[MAXCONNINFO];
+	parse_and_scrub_connection_string(pgsql->connectionString, scrubbedConnectionString);
 	log_warn("Failed to connect to \"%s\", retrying until "
-			 "the server is ready", pgsql->connectionString);
+			 "the server is ready", scrubbedConnectionString);
 
 	/* should not happen */
 	if (pgsql->retryPolicy.maxR == 0)
@@ -553,7 +563,7 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 			log_error("Failed to connect to \"%s\" "
 					  "after %d attempts in %d seconds, "
 					  "pg_autoctl stops retrying now",
-					  pgsql->connectionString,
+					  scrubbedConnectionString,
 					  pgsql->retryPolicy.attempts,
 					  (int) (now - pgsql->retryPolicy.startTime));
 
@@ -570,7 +580,7 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 		(void) pg_usleep(sleep * 1000);
 
 		log_debug("PQping(%s): slept %d ms on attempt %d",
-				  pgsql->connectionString,
+				  scrubbedConnectionString,
 				  pgsql->retryPolicy.sleepTime,
 				  pgsql->retryPolicy.attempts);
 
@@ -605,7 +615,7 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 
 					log_info("Successfully connected to \"%s\" "
 							 "after %d attempts in %d seconds.",
-							 pgsql->connectionString,
+							 scrubbedConnectionString,
 							 pgsql->retryPolicy.attempts,
 							 (int) (now - pgsql->retryPolicy.startTime));
 				}
@@ -622,7 +632,7 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 					log_warn("Failed to connect after successful "
 							 "ping, please verify authentication "
 							 "and logs on the server at \"%s\"",
-							 pgsql->connectionString);
+							 scrubbedConnectionString);
 
 					log_warn("Authentication might have failed on the Postgres "
 							 "server due to missing HBA rules.");
@@ -650,7 +660,7 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 						"The server at \"%s\" is running but is in a state "
 						"that disallows connections (startup, shutdown, or "
 						"crash recovery).",
-						pgsql->connectionString);
+						scrubbedConnectionString);
 				}
 				break;
 			}
@@ -683,7 +693,7 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 						"number), or that there is a network connectivity "
 						"problem (for example, a firewall blocking the "
 						"connection request).",
-						pgsql->connectionString,
+						scrubbedConnectionString,
 						pgsql->retryPolicy.attempts,
 						(int) (now - pgsql->retryPolicy.startTime));
 				}
@@ -702,7 +712,7 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 				lastWarningMessage = PQPING_NO_ATTEMPT;
 				log_debug("Failed to ping server \"%s\" because of "
 						  "client-side problems (no attempt were made)",
-						  pgsql->connectionString);
+						  scrubbedConnectionString);
 				break;
 			}
 		}
@@ -716,6 +726,8 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 
 		return false;
 	}
+
+	PQfreemem(scrubbedConnectionString);
 
 	return true;
 }
@@ -2159,20 +2171,20 @@ validate_connection_string(const char *connectionString)
 {
 	char *errorMessage = NULL;
 
+
 	int length = strlen(connectionString);
 	if (length >= MAXCONNINFO)
 	{
-		log_error("Connection string \"%s\" is %d "
+		log_error("Connection string is %d "
 				  "characters, the maximum supported by pg_autoctl is %d",
-				  connectionString, length, MAXCONNINFO);
+				  length, MAXCONNINFO);
 		return false;
 	}
 
 	PQconninfoOption *connInfo = PQconninfoParse(connectionString, &errorMessage);
 	if (connInfo == NULL)
 	{
-		log_error("Failed to parse connection string \"%s\": %s ",
-				  connectionString, errorMessage);
+		log_error("Failed to parse connection string: %s ", errorMessage);
 		PQfreemem(errorMessage);
 		return false;
 	}

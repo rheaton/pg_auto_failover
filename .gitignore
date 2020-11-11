@@ -38,6 +38,7 @@ lib*.pc
 /Makefile.global
 /src/Makefile.custom
 /tests/__pycache__/
+/tests/check/run_tests
 /env/
 
 # Exclude generated SQL files

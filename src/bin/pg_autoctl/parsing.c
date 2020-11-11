@@ -532,7 +532,8 @@ parse_pguri_info_key_vals(const char *pguri,
 	conninfo = PQconninfoParse(pguri, &errmsg);
 	if (conninfo == NULL)
 	{
-		log_error("Failed to parse pguri \"%s\": %s", pguri, errmsg);
+		log_error("Failed to parse pguri: %s", errmsg);
+
 		PQfreemem(errmsg);
 		return false;
 	}
@@ -852,6 +853,69 @@ parseNodesArray(const char *nodesJSON,
 			return false;
 		}
 	}
+
+	return true;
+}
+
+
+/*
+ * remove_password_from_parameters is a non-exported function that will remove the keyword
+ * and value if the keyword matches "password" for scrubbing a connection string in logs.
+ */
+void
+remove_password_from_parameters(KeyVal *parameters)
+{
+	int count = parameters->count;
+	int passwordIndex = -1;
+	char *keyword = "password";
+	for (int i = 0; i < count; i++)
+	{
+		if (strcmp(parameters->keywords[i], keyword) == 0)
+		{
+			passwordIndex = i;
+			break;
+		}
+	}
+	if (passwordIndex != -1)
+	{
+		if (passwordIndex == count - 1)
+		{
+			memset(parameters->keywords[passwordIndex], 0,
+				   sizeof(parameters->keywords[passwordIndex]));
+			memset(parameters->values[passwordIndex], 0,
+				   sizeof(parameters->values[passwordIndex]));
+		}
+		else
+		{
+			strcpy(parameters->keywords[passwordIndex],
+				   parameters->keywords[parameters->count - 1]);
+			strcpy(parameters->values[passwordIndex],
+				   parameters->values[parameters->count - 1]);
+		}
+		parameters->count--;
+	}
+}
+
+
+/*
+ * parse_and_scrub_connection_string takes a Postgres connection string and
+ * populates scrubbedPguri with the password removed for logging. The scrubbedPguri parameter
+ * should point to a memory area that has been allocated by the caller and has at least
+ * MAXCONNINFO bytes.
+ */
+bool
+parse_and_scrub_connection_string(char *pguri, char *scrubbedPguri)
+{
+	bool parseUri;
+	URIParams uriParams = { 0 };
+	KeyVal overrides = { 0 };
+	parseUri = parse_pguri_info_key_vals(pguri, &overrides, &uriParams);
+	if (!parseUri)
+	{
+		return false;
+	}
+	remove_password_from_parameters(&uriParams.parameters);
+	buildPostgresURIfromPieces(&uriParams, scrubbedPguri);
 
 	return true;
 }

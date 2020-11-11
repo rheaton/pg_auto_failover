@@ -1132,9 +1132,7 @@ update_monitor_connection_string(KeeperConfig *config)
 								   &params))
 	{
 		log_warn(
-			"The monitor SSL setup is ready and your current "
-			"connection string is \"%s\", you might need to update it",
-			config->monitor_pguri);
+			"The monitor SSL setup is ready, you might need to update it");
 
 		log_info(
 			"Use pg_autoctl config set pg_autoctl.monitor for updating "
@@ -1153,9 +1151,10 @@ update_monitor_connection_string(KeeperConfig *config)
 		return false;
 	}
 
-
+	char scrubbedConnectionString[MAXCONNINFO];
+	parse_and_scrub_connection_string(newPgURI, scrubbedConnectionString);
 	log_info("Trying to connect to monitor using connection string \"%s\"",
-			 newPgURI);
+			 scrubbedConnectionString);
 
 	/*
 	 * Try to connect using the new connection string and don't update it if it
@@ -1170,7 +1169,8 @@ update_monitor_connection_string(KeeperConfig *config)
 	/* we have a new monitor URI with our new SSL parameters */
 	strlcpy(config->monitor_pguri, newPgURI, MAXCONNINFO);
 
-	log_info("Updating the monitor URI to \"%s\"", config->monitor_pguri);
+	log_info("Updating the monitor URI to \"%s\"", scrubbedConnectionString);
+	PQfreemem(scrubbedConnectionString);
 
 	return true;
 }
