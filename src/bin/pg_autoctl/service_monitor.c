@@ -30,9 +30,10 @@
 #include "runprogram.h"
 
 
+Semaphore log_semaphore;        /* allows inter-process locking */
+
 static void reload_configuration(Monitor *monitor);
 static bool monitor_ensure_configuration(Monitor *monitor);
-
 
 /*
  * monitor_service_start starts the monitor processes: the Postgres instance

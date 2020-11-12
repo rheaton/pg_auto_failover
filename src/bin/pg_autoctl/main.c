@@ -19,16 +19,6 @@
 #include "lock_utils.h"
 #include "string_utils.h"
 
-char pg_autoctl_argv0[MAXPGPATH];
-char pg_autoctl_program[MAXPGPATH];
-int pgconnect_timeout = 2;      /* see also POSTGRES_CONNECT_TIMEOUT */
-
-char *ps_buffer;                /* will point to argv area */
-size_t ps_buffer_size;          /* space determined at run time */
-size_t last_status_len;         /* use to minimize length of clobber */
-
-Semaphore log_semaphore;        /* allows inter-process locking */
-
 
 static void set_logger(void);
 static void log_semaphore_unlink_atexit(void);

@@ -30,6 +30,10 @@ static bool read_file_internal(FILE *fileStream,
 							   char **contents,
 							   long *fileSize);
 
+char *ps_buffer;                /* will point to argv area */
+size_t ps_buffer_size;          /* space determined at run time */
+size_t last_status_len;         /* use to minimize length of clobber */
+
 /*
  * file_exists returns true if the given filename is known to exist
  * on the file system or false if it does not exists or in case of
