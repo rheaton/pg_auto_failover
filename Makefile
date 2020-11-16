@@ -94,6 +94,9 @@ test:
 		--stop					\
 		${TEST_ARGUMENT}
 
+test_unit:
+	$(MAKE) -C src/bin/pg_autoctl test
+
 indent:
 	citus_indent
 	black .

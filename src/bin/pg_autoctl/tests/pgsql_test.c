@@ -4,7 +4,7 @@
 /* */
 
 #include <check.h>
-#include "../../src/bin/pg_autoctl/pgsql.h"
+#include "../pgsql.h"
 
 START_TEST(test_pgsql_init)
 {

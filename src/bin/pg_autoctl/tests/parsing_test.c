@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 #include <check.h>
-#include "../../src/bin/pg_autoctl/parsing.h"
+#include "../parsing.h"
 
 START_TEST(test_parse_pguri_info_key_vals)
 {

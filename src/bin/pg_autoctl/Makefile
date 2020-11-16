@@ -92,6 +92,7 @@ install: $(PG_AUTOCTL)
 	install -d $(DESTDIR)$(BINDIR)
 	install -m 0755 $(PG_AUTOCTL) $(DESTDIR)$(BINDIR)
 
-
+test:
+	make -C tests test
 
 .PHONY: all monitor clean

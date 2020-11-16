@@ -3,7 +3,7 @@
 PG_CONFIG ?= pg_config
 BINDIR    ?= $(shell $(PG_CONFIG) --bindir)
 TEST_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-SRC_DIR := ${TEST_DIR}../../src/bin
+SRC_DIR := ${TEST_DIR}../..
 
 DEFAULT_CFLAGS = -std=c99 -D_GNU_SOURCE -g
 DEFAULT_CFLAGS += -I $(shell $(PG_CONFIG) --includedir)
@@ -42,7 +42,6 @@ TEST_OBJS = $(patsubst ${TEST_DIR}/%.c,%.o,$(wildcard ${TEST_DIR}/*.c))
 
 build_src:
 	make -C ${SRC_DIR}/pg_autoctl
-
 
 build_test: build_src $(TEST_OBJS)
 	$(CC) $(CFLAGS) $(TEST_OBJS) $(OBJS) $(LIBS) -o run_tests
