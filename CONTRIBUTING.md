@@ -63,6 +63,8 @@ chmod +x .git/hooks/pre-commit
 
 ### Running tests
 
+#### Integration tests
+
 The integration tests are written using Python and the
 [nose](https://nose.readthedocs.io/en/latest/index.html) testing framework.
 They are run in a docker container, so you need
@@ -78,6 +80,14 @@ You can filter the tests you are running with the `TEST` environment variable.
 make TEST=multi run-test       # runs tests matching tests/test_multi*
 make TEST=single run-test      # runs tests _not_ matching tests/test_multi*
 make TEST=test_auth run-test   # runs tests/test_auth.py
+```
+
+#### C Unit tests
+
+Install [check](https://libcheck.github.io/check/web/install.html).
+
+```bash
+make test_unit
 ```
 
 ### Producing the documentation diagrams
