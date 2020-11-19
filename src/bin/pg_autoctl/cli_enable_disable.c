@@ -1151,7 +1151,7 @@ update_monitor_connection_string(KeeperConfig *config)
 		return false;
 	}
 
-	char scrubbedConnectionString[MAXCONNINFO];
+	char scrubbedConnectionString[MAXCONNINFO] = { 0 };
 	parse_and_scrub_connection_string(newPgURI, scrubbedConnectionString);
 	log_info("Trying to connect to monitor using connection string \"%s\"",
 			 scrubbedConnectionString);
@@ -1170,7 +1170,6 @@ update_monitor_connection_string(KeeperConfig *config)
 	strlcpy(config->monitor_pguri, newPgURI, MAXCONNINFO);
 
 	log_info("Updating the monitor URI to \"%s\"", scrubbedConnectionString);
-	PQfreemem(scrubbedConnectionString);
 
 	return true;
 }

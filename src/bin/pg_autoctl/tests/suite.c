@@ -20,6 +20,8 @@ parsing_suite(void)
 	tc_core = tcase_create("parsing.c");
 	tcase_add_test(tc_core, test_parse_pguri_info_key_vals);
 	tcase_add_test(tc_core, test_parse_pguri_info_key_vals_with_overrides);
+	tcase_add_test(tc_core,
+				   test_parse_pguri_info_key_vals_with_overrides_not_originally_set);
 	tcase_add_test(tc_core, test_buildPostgresURIfromPieces);
 	tcase_add_test(tc_core, test_buildPostgresURIfromPiecesSingleParameter);
 	tcase_add_test(tc_core, test_parse_and_scrub_connection_string);
@@ -28,6 +30,8 @@ parsing_suite(void)
 				   test_parse_and_scrub_connection_string_failure_to_parse_totally_invalid);
 	tcase_add_test(tc_core,
 				   test_parse_and_scrub_connection_string_failure_to_parse_bad_uri_param);
+	tcase_add_test(tc_core,
+				   test_parse_and_scrub_connection_string_with_no_password_in_it);
 	suite_add_tcase(s, tc_core);
 
 	tc_pgsql = tcase_create("pgsql.c");

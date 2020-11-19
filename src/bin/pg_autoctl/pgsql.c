@@ -357,11 +357,10 @@ pgsql_finish(PGSQL *pgsql)
 {
 	if (pgsql->connection != NULL)
 	{
-		char scrubbedConnectionString[MAXCONNINFO];
+		char scrubbedConnectionString[MAXCONNINFO] = { 0 };
 		parse_and_scrub_connection_string(pgsql->connectionString,
 										  scrubbedConnectionString);
 		log_debug("Disconnecting from \"%s\"", scrubbedConnectionString);
-		PQfreemem(scrubbedConnectionString);
 
 		PQfinish(pgsql->connection);
 		pgsql->connection = NULL;
@@ -457,7 +456,7 @@ pgsql_open_connection(PGSQL *pgsql)
 		return pgsql->connection;
 	}
 
-	char scrubbedConnectionString[MAXCONNINFO];
+	char scrubbedConnectionString[MAXCONNINFO] = { 0 };
 	parse_and_scrub_connection_string(pgsql->connectionString, scrubbedConnectionString);
 	log_debug("Connecting to \"%s\"", scrubbedConnectionString);
 
@@ -518,7 +517,6 @@ pgsql_open_connection(PGSQL *pgsql)
 						 &pgAutoCtlDefaultNoticeProcessor,
 						 NULL);
 
-	PQfreemem(scrubbedConnectionString);
 	return pgsql->connection;
 }
 
@@ -536,7 +534,7 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 	PGPing lastWarningMessage = PQPING_OK;
 	uint64_t lastWarningTime = 0;
 
-	char scrubbedConnectionString[MAXCONNINFO];
+	char scrubbedConnectionString[MAXCONNINFO] = { 0 };
 	parse_and_scrub_connection_string(pgsql->connectionString, scrubbedConnectionString);
 	log_warn("Failed to connect to \"%s\", retrying until "
 			 "the server is ready", scrubbedConnectionString);
@@ -727,7 +725,6 @@ pgsql_retry_open_connection(PGSQL *pgsql)
 		return false;
 	}
 
-	PQfreemem(scrubbedConnectionString);
 
 	return true;
 }

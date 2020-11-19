@@ -62,6 +62,38 @@ START_TEST(test_parse_pguri_info_key_vals_with_overrides)
 	ck_assert_str_eq(uriParameters.parameters.values[2], "read");
 }
 
+START_TEST(test_parse_pguri_info_key_vals_with_overrides_not_originally_set)
+{
+	bool parsed;
+	char pguri[MAXCONNINFO] =
+		"postgres://admin:secretpassword@monitor.local:9999/testdb?target_session_attrs=read";
+	KeyVal overrides = {
+		1, { "sslmode" }, { "overridensslmode" }
+	};
+
+	URIParams uriParameters = { 0 };
+
+	parsed = parse_pguri_info_key_vals(pguri, &overrides, &uriParameters);
+
+	ck_assert(parsed);
+
+	ck_assert_str_eq(uriParameters.dbname, "testdb");
+	ck_assert_str_eq(uriParameters.hostname, "monitor.local");
+	ck_assert_str_eq(uriParameters.username, "admin");
+	ck_assert_str_eq(uriParameters.port, "9999");
+
+	ck_assert_int_eq(uriParameters.parameters.count, 3);
+
+	ck_assert_str_eq(uriParameters.parameters.keywords[0], "password");
+	ck_assert_str_eq(uriParameters.parameters.values[0], "secretpassword");
+
+	ck_assert_str_eq(uriParameters.parameters.keywords[1], "sslmode");
+	ck_assert_str_eq(uriParameters.parameters.values[1], "overridensslmode");
+
+	ck_assert_str_eq(uriParameters.parameters.keywords[2], "target_session_attrs");
+	ck_assert_str_eq(uriParameters.parameters.values[2], "read");
+}
+
 START_TEST(test_parse_and_scrub_connection_string)
 {
 	bool parsed;
@@ -71,7 +103,8 @@ START_TEST(test_parse_and_scrub_connection_string)
 	parsed = parse_and_scrub_connection_string(pguri, scrubbedPguri);
 
 	ck_assert(parsed);
-	ck_assert_str_eq(scrubbedPguri, "postgres://admin@monitor.local:9999/testdb?");
+	ck_assert_str_eq(scrubbedPguri,
+					 "postgres://admin@monitor.local:9999/testdb?password=****");
 }
 
 START_TEST(test_parse_and_scrub_connection_string_with_parameters)
@@ -85,7 +118,7 @@ START_TEST(test_parse_and_scrub_connection_string_with_parameters)
 
 	ck_assert(parsed);
 	ck_assert_str_eq(scrubbedPguri,
-					 "postgres://admin@monitor.local:9999/testdb?target_session_attrs=read");
+					 "postgres://admin@monitor.local:9999/testdb?password=****&target_session_attrs=read");
 }
 
 START_TEST(test_parse_and_scrub_connection_string_failure_to_parse_totally_invalid)
@@ -111,6 +144,18 @@ START_TEST(test_parse_and_scrub_connection_string_failure_to_parse_bad_uri_param
 	ck_assert(!parsed);
 }
 
+START_TEST(test_parse_and_scrub_connection_string_with_no_password_in_it)
+{
+	bool parsed;
+	char pguri[MAXCONNINFO] = "postgres://admin@monitor.local:9999/testdb";
+	char scrubbedPguri[MAXCONNINFO];
+
+	parsed = parse_and_scrub_connection_string(pguri, scrubbedPguri);
+
+	ck_assert(parsed);
+	ck_assert_str_eq(scrubbedPguri, "postgres://admin@monitor.local:9999/testdb?");
+}
+
 START_TEST(test_buildPostgresURIfromPieces)
 {
 	bool parsed;
@@ -128,14 +173,14 @@ START_TEST(test_buildPostgresURIfromPieces)
 	strcpy(params.dbname, "testdb");
 	strcpy(params.port, "9999");
 	strcpy(params.hostname, "monitor.local");
-	strcpy(params.username, "admin:secretpassword");
+	strcpy(params.username, "admin");
 	params.parameters = keyval;
 
 	parsed = buildPostgresURIfromPieces(&params, newPgURI);
 	ck_assert(parsed);
 
 	ck_assert_str_eq(
-		"postgres://admin:secretpassword@monitor.local:9999/testdb?ssl=false&target_session_attrs=read",
+		"postgres://admin@monitor.local:9999/testdb?ssl=false&target_session_attrs=read",
 		newPgURI
 		);
 }
@@ -155,13 +200,13 @@ START_TEST(test_buildPostgresURIfromPiecesSingleParameter)
 	strcpy(params.dbname, "testdb");
 	strcpy(params.port, "9999");
 	strcpy(params.hostname, "monitor.local");
-	strcpy(params.username, "admin:secretpassword");
+	strcpy(params.username, "admin");
 	params.parameters = keyval;
 
 	parsed = buildPostgresURIfromPieces(&params, newPgURI);
 	ck_assert(parsed);
 	ck_assert_str_eq(
-		"postgres://admin:secretpassword@monitor.local:9999/testdb?target_session_attrs=read",
+		"postgres://admin@monitor.local:9999/testdb?target_session_attrs=read",
 		newPgURI
 		);
 }

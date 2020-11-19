@@ -155,7 +155,7 @@ keeper_pg_init_and_register(Keeper *keeper)
 		return keeper_init_fsm(keeper);
 	}
 
-	char scrubbedConnectionString[MAXCONNINFO];
+	char scrubbedConnectionString[MAXCONNINFO] = { 0 };
 	parse_and_scrub_connection_string(config->monitor_pguri, scrubbedConnectionString);
 
 	/*
@@ -265,7 +265,6 @@ keeper_pg_init_and_register(Keeper *keeper)
 
 	log_debug("pg exists: %s", postgresInstanceExists ? "yes" : "no");
 	log_debug("pg is primary: %s", postgresInstanceIsPrimary ? "yes" : "no");
-	PQfreemem(scrubbedConnectionString);
 	return false;
 }
 
@@ -281,7 +280,7 @@ keeper_pg_init_and_register_primary(Keeper *keeper)
 	KeeperConfig *config = &(keeper->config);
 	PostgresSetup *pgSetup = &(config->pgSetup);
 	char absolutePgdata[PATH_MAX];
-	char scrubbedConnectionString[MAXCONNINFO];
+	char scrubbedConnectionString[MAXCONNINFO] = { 0 };
 	parse_and_scrub_connection_string(config->monitor_pguri, scrubbedConnectionString);
 
 	log_info("A postgres directory already exists at \"%s\", registering "

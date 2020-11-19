@@ -857,64 +857,64 @@ parseNodesArray(const char *nodesJSON,
 	return true;
 }
 
-
-/*
- * remove_password_from_parameters is a non-exported function that will remove the keyword
- * and value if the keyword matches "password" for scrubbing a connection string in logs.
- */
-void
-remove_password_from_parameters(KeyVal *parameters)
+static bool
+uri_contains_password(char *pguri)
 {
-	int count = parameters->count;
-	int passwordIndex = -1;
-	char *keyword = "password";
-	for (int i = 0; i < count; i++)
+	char *errmsg;
+	PQconninfoOption *conninfo, *option;
+
+	conninfo = PQconninfoParse(pguri, &errmsg);
+	if (conninfo == NULL)
 	{
-		if (strcmp(parameters->keywords[i], keyword) == 0)
+		log_error("Failed to parse pguri: %s", errmsg);
+
+		PQfreemem(errmsg);
+		return false;
+	}
+
+	//
+	// Look for a populated password connection parameter
+	//
+	for (option = conninfo; option->keyword != NULL; option++)
+	{
+		if (
+			strcmp(option->keyword, "password") == 0 &&
+				option->val != NULL &&
+				strcmp(option->val, "") != 0)
 		{
-			passwordIndex = i;
-			break;
+			return true;
 		}
 	}
-	if (passwordIndex != -1)
-	{
-		if (passwordIndex == count - 1)
-		{
-			memset(parameters->keywords[passwordIndex], 0,
-				   sizeof(parameters->keywords[passwordIndex]));
-			memset(parameters->values[passwordIndex], 0,
-				   sizeof(parameters->values[passwordIndex]));
-		}
-		else
-		{
-			strcpy(parameters->keywords[passwordIndex],
-				   parameters->keywords[parameters->count - 1]);
-			strcpy(parameters->values[passwordIndex],
-				   parameters->values[parameters->count - 1]);
-		}
-		parameters->count--;
-	}
+
+	return false;
 }
 
 
 /*
  * parse_and_scrub_connection_string takes a Postgres connection string and
- * populates scrubbedPguri with the password removed for logging. The scrubbedPguri parameter
+ * populates scrubbedPguri with the password replaced with **** for logging. The scrubbedPguri parameter
  * should point to a memory area that has been allocated by the caller and has at least
  * MAXCONNINFO bytes.
  */
 bool
 parse_and_scrub_connection_string(char *pguri, char *scrubbedPguri)
 {
-	bool parseUri;
 	URIParams uriParams = { 0 };
 	KeyVal overrides = { 0 };
-	parseUri = parse_pguri_info_key_vals(pguri, &overrides, &uriParams);
-	if (!parseUri)
+
+	if (uri_contains_password(pguri)) {
+		overrides = (KeyVal){
+			.count=1,
+			.keywords={"password"},
+			.values={"****"}
+		};
+	}
+
+	if (!parse_pguri_info_key_vals(pguri, &overrides, &uriParams))
 	{
 		return false;
 	}
-	remove_password_from_parameters(&uriParams.parameters);
+
 	buildPostgresURIfromPieces(&uriParams, scrubbedPguri);
 
 	return true;
