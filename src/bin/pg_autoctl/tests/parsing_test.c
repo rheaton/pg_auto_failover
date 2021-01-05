@@ -13,7 +13,7 @@ START_TEST(test_parse_pguri_info_key_vals)
 	char pguri[MAXCONNINFO] =
 		"postgres://admin:secretpassword@monitor.local:9999/testdb?target_session_attrs=read";
 	KeyVal overrides = { 0 };
-	URIParams uriParameters = { 0 };
+	URIParams uriParameters = { {0} };
 
 	parsed = parse_pguri_info_key_vals(pguri, &overrides, &uriParameters);
 
@@ -39,7 +39,7 @@ START_TEST(test_parse_pguri_info_key_vals_with_overrides)
 		1, { "sslmode" }, { "overridensslmode" }
 	};
 
-	URIParams uriParameters = { 0 };
+	URIParams uriParameters = { {0} };
 
 	parsed = parse_pguri_info_key_vals(pguri, &overrides, &uriParameters);
 
@@ -71,7 +71,7 @@ START_TEST(test_parse_pguri_info_key_vals_with_overrides_not_originally_set)
 		1, { "sslmode" }, { "overridensslmode" }
 	};
 
-	URIParams uriParameters = { 0 };
+	URIParams uriParameters = { {0} };
 
 	parsed = parse_pguri_info_key_vals(pguri, &overrides, &uriParameters);
 
@@ -160,7 +160,7 @@ START_TEST(test_buildPostgresURIfromPieces)
 {
 	bool parsed;
 
-	URIParams params = { 0 };
+	URIParams params = { {0} };
 	KeyVal keyval = { 0 };
 	char newPgURI[MAXCONNINFO] = { 0 };
 
@@ -185,11 +185,12 @@ START_TEST(test_buildPostgresURIfromPieces)
 		);
 }
 END_TEST
+
 START_TEST(test_buildPostgresURIfromPiecesSingleParameter)
 {
 	bool parsed;
 
-	URIParams params = { 0 };
+	URIParams params = { {0} };
 	KeyVal keyval = { 0 };
 	char newPgURI[MAXCONNINFO] = { 0 };
 
@@ -210,3 +211,4 @@ START_TEST(test_buildPostgresURIfromPiecesSingleParameter)
 		newPgURI
 		);
 }
+END_TEST
