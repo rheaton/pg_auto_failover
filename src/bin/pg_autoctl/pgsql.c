@@ -358,8 +358,11 @@ pgsql_finish(PGSQL *pgsql)
 	if (pgsql->connection != NULL)
 	{
 		char scrubbedConnectionString[MAXCONNINFO] = { 0 };
-		parse_and_scrub_connection_string(pgsql->connectionString,
-										  scrubbedConnectionString);
+		if (!parse_and_scrub_connection_string(pgsql->connectionString,
+											   scrubbedConnectionString))
+		{
+			return;
+		}
 		log_debug("Disconnecting from \"%s\"", scrubbedConnectionString);
 
 		PQfinish(pgsql->connection);
@@ -2181,7 +2184,8 @@ validate_connection_string(const char *connectionString)
 	PQconninfoOption *connInfo = PQconninfoParse(connectionString, &errorMessage);
 	if (connInfo == NULL)
 	{
-		log_error("Failed to parse connection string: %s ", errorMessage);
+		log_error("Failed to parse connection string \"%s\": %s ",
+				  connectionString, errorMessage);
 		PQfreemem(errorMessage);
 		return false;
 	}

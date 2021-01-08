@@ -1214,7 +1214,7 @@ check_or_discover_hostname(KeeperConfig *config)
 									&monitorPort))
 		{
 			log_fatal("Failed to determine monitor hostname when parsing "
-					  "Postgres URI");
+					  "Postgres URI \"%s\"", config->monitor_pguri);
 			return false;
 		}
 

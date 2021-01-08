@@ -156,7 +156,12 @@ keeper_pg_init_and_register(Keeper *keeper)
 	}
 
 	char scrubbedConnectionString[MAXCONNINFO] = { 0 };
-	parse_and_scrub_connection_string(config->monitor_pguri, scrubbedConnectionString);
+	if (!parse_and_scrub_connection_string(config->monitor_pguri,
+										   scrubbedConnectionString))
+	{
+		log_error("Monitor connection string is unparseable");
+		return false;
+	}
 
 	/*
 	 * If the local Postgres instance does not exist, we have two possible
@@ -281,7 +286,12 @@ keeper_pg_init_and_register_primary(Keeper *keeper)
 	PostgresSetup *pgSetup = &(config->pgSetup);
 	char absolutePgdata[PATH_MAX];
 	char scrubbedConnectionString[MAXCONNINFO] = { 0 };
-	parse_and_scrub_connection_string(config->monitor_pguri, scrubbedConnectionString);
+	if (!parse_and_scrub_connection_string(config->monitor_pguri,
+										   scrubbedConnectionString))
+	{
+		log_error("Monitor connection string is unparseable");
+		return false;
+	}
 
 	log_info("A postgres directory already exists at \"%s\", registering "
 			 "as a single node",
@@ -300,7 +310,6 @@ keeper_pg_init_and_register_primary(Keeper *keeper)
 
 	log_info("Successfully registered as \"%s\" to the monitor.",
 			 NodeStateToString(keeper->state.assigned_role));
-	PQfreemem(scrubbedConnectionString);
 
 	return reach_initial_state(keeper);
 }

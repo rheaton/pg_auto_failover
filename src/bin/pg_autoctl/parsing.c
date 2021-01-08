@@ -532,7 +532,7 @@ parse_pguri_info_key_vals(const char *pguri,
 	conninfo = PQconninfoParse(pguri, &errmsg);
 	if (conninfo == NULL)
 	{
-		log_error("Failed to parse pguri: %s", errmsg);
+		log_error("Failed to parse pguri \"%s\": %s", pguri, errmsg);
 
 		PQfreemem(errmsg);
 		return false;
@@ -857,6 +857,7 @@ parseNodesArray(const char *nodesJSON,
 	return true;
 }
 
+
 static bool
 uri_contains_password(char *pguri)
 {
@@ -872,15 +873,15 @@ uri_contains_password(char *pguri)
 		return false;
 	}
 
-	//
-	// Look for a populated password connection parameter
-	//
+	/* */
+	/* Look for a populated password connection parameter */
+	/* */
 	for (option = conninfo; option->keyword != NULL; option++)
 	{
 		if (
 			strcmp(option->keyword, "password") == 0 &&
-				option->val != NULL &&
-				strcmp(option->val, "") != 0)
+			option->val != NULL &&
+			strcmp(option->val, "") != 0)
 		{
 			return true;
 		}
@@ -902,11 +903,12 @@ parse_and_scrub_connection_string(char *pguri, char *scrubbedPguri)
 	URIParams uriParams = { 0 };
 	KeyVal overrides = { 0 };
 
-	if (uri_contains_password(pguri)) {
-		overrides = (KeyVal){
-			.count=1,
-			.keywords={"password"},
-			.values={"****"}
+	if (uri_contains_password(pguri))
+	{
+		overrides = (KeyVal) {
+			.count = 1,
+			.keywords = { "password" },
+			.values = { "****" }
 		};
 	}
 

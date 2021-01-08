@@ -1132,7 +1132,9 @@ update_monitor_connection_string(KeeperConfig *config)
 								   &params))
 	{
 		log_warn(
-			"The monitor SSL setup is ready, you might need to update it");
+			"The monitor SSL setup is ready and your current "
+			"connection string is \"%s\", you might need to update it",
+			config->monitor_pguri);
 
 		log_info(
 			"Use pg_autoctl config set pg_autoctl.monitor for updating "
@@ -1152,9 +1154,19 @@ update_monitor_connection_string(KeeperConfig *config)
 	}
 
 	char scrubbedConnectionString[MAXCONNINFO] = { 0 };
-	parse_and_scrub_connection_string(newPgURI, scrubbedConnectionString);
-	log_info("Trying to connect to monitor using connection string \"%s\"",
-			 scrubbedConnectionString);
+	if (parse_and_scrub_connection_string(newPgURI, scrubbedConnectionString))
+	{
+		log_info("Trying to connect to monitor using connection string \"%s\"",
+				 scrubbedConnectionString);
+	}
+	else
+	{
+		log_info(
+			"Trying to connect to monitor using unparseable connection string \"%s\"",
+			newPgURI);
+		return false;
+	}
+
 
 	/*
 	 * Try to connect using the new connection string and don't update it if it
