@@ -35,9 +35,6 @@
 
 #include "runprogram.h"
 
-char pg_autoctl_argv0[MAXPGPATH];
-char pg_autoctl_program[MAXPGPATH];
-
 char *tmux_banner[] = {
 	"# to quit tmux: type either `Ctrl+b d` or `tmux detach`",
 	"# to test failover: pg_autoctl perform failover",

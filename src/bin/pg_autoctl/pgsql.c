@@ -22,7 +22,6 @@
 #include "signals.h"
 #include "string_utils.h"
 
-int pgconnect_timeout = 2;      /* see also POSTGRES_CONNECT_TIMEOUT */
 
 #define ERRCODE_DUPLICATE_OBJECT "42710"
 #define ERRCODE_DUPLICATE_DATABASE "42P04"

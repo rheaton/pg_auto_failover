@@ -75,6 +75,7 @@ def test_004_failover():
 
     assert node1.wait_until_state(target_state="secondary")
 
+
 def test_005_logging_of_passwords():
     logs = node2.logs()
     assert monitor_password not in logs

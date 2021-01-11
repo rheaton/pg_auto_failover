@@ -21,6 +21,7 @@ typedef struct Semaphore
 	int semId;
 } Semaphore;
 
+Semaphore log_semaphore;        /* allows inter-process locking */
 
 bool semaphore_init(Semaphore *semaphore);
 bool semaphore_finish(Semaphore *semaphore);
