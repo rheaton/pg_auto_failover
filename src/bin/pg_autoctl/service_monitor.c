@@ -33,7 +33,6 @@
 static void reload_configuration(Monitor *monitor);
 static bool monitor_ensure_configuration(Monitor *monitor);
 
-
 /*
  * monitor_service_start starts the monitor processes: the Postgres instance
  * and the user-facing LISTEN client that displays notifications.
